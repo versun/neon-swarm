@@ -1,0 +1,213 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* NEON SWARM is a dark-only experience: root uses the deep-space palette */
+    --background: 222 71% 4%;
+    --foreground: 210 40% 98%;
+    --card: 216 65% 7%;
+    --card-foreground: 210 40% 98%;
+    --popover: 216 65% 7%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 187 85% 53%;
+    --primary-foreground: 204 80% 6%;
+    --secondary: 215 50% 12%;
+    --secondary-foreground: 199 89% 76%;
+    --muted: 215 40% 14%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 215 50% 14%;
+    --accent-foreground: 199 89% 76%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 206 45% 18%;
+    --input: 206 45% 20%;
+    --ring: 199 89% 76%;
+    --radius: 0.625rem;
+    --sidebar-background: 216 65% 7%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 187 85% 53%;
+    --sidebar-primary-foreground: 204 80% 6%;
+    --sidebar-accent: 215 50% 14%;
+    --sidebar-accent-foreground: 199 89% 76%;
+    --sidebar-border: 206 45% 18%;
+    --sidebar-ring: 199 89% 76%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-void-950 text-foreground font-sans antialiased;
+    background-image:
+      radial-gradient(circle at 50% 0%, rgba(34, 211, 238, 0.07), transparent 42%),
+      radial-gradient(circle at 85% 90%, rgba(139, 92, 246, 0.06), transparent 40%);
+    background-attachment: fixed;
+  }
+
+  /* Custom 18px cyan crosshair cursor (design.md §8) */
+  body {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18'%3E%3Ccircle cx='9' cy='9' r='6' fill='none' stroke='%2367E8F9' stroke-opacity='0.55' stroke-width='1'/%3E%3Ccircle cx='9' cy='9' r='1.6' fill='%2322D3EE'/%3E%3Cpath d='M9 0v4M9 14v4M0 9h4M14 9h4' stroke='%2322D3EE' stroke-width='1.2'/%3E%3C/svg%3E") 9 9, crosshair;
+  }
+  a, button, [role="button"], select, label {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M12 3a9 9 0 0 1 9 9M12 21a9 9 0 0 1-9-9' fill='none' stroke='%2322D3EE' stroke-width='1.6'/%3E%3Ccircle cx='12' cy='12' r='2' fill='%23E935C1'/%3E%3Cpath d='M12 8v3M12 13v3M8 12h3M13 12h3' stroke='%2367E8F9' stroke-width='1'/%3E%3C/svg%3E") 12 12, pointer;
+  }
+  input, textarea, [contenteditable="true"] {
+    cursor: text;
+  }
+
+  ::selection {
+    background: rgba(34, 211, 238, 0.35);
+    color: #ffffff;
+  }
+
+  :focus-visible {
+    outline: 2px solid #67e8f9;
+    outline-offset: 2px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #030712;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #0b1628;
+    border: 2px solid #030712;
+    border-radius: 6px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(34, 211, 238, 0.4);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    .animate-scan-sweep,
+    .animate-data-flow,
+    .animate-drift-slow,
+    .animate-trail-fly {
+      animation: none !important;
+    }
+  }
+}
+
+@layer components {
+  /* Neon gradient headline text — use on 2–3 keywords only (design.md §5.3) */
+  .text-neon-gradient {
+    background: linear-gradient(135deg, #22d3ee 0%, #8b5cf6 48%, #e935c1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .text-danger-gradient {
+    background: linear-gradient(135deg, #fbbf24 0%, #ef4444 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Glass HUD panel (design.md §4.3 / §7.4) */
+  .glass-panel {
+    background: rgba(7, 17, 31, 0.72);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(103, 232, 249, 0.22);
+  }
+
+  /* 10px chamfered corner cut used by primary buttons & neon panels */
+  .clip-corner {
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  }
+  .clip-corner-sm {
+    clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+  }
+
+  /* Primary neon gradient button surface */
+  .btn-neon-primary {
+    background: linear-gradient(135deg, #22d3ee 0%, #8b5cf6 48%, #e935c1 100%);
+    color: #03111c;
+    transition: filter 150ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      transform 150ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 150ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .btn-neon-primary:hover {
+    filter: brightness(1.08);
+    transform: translateX(2px);
+    box-shadow: 0 0 28px rgba(34, 211, 238, 0.5);
+  }
+  .btn-neon-primary:active {
+    transform: scale(0.97);
+    transition-duration: 100ms;
+  }
+
+  .btn-neon-secondary {
+    background: rgba(3, 7, 18, 0.5);
+    border: 1px solid rgba(34, 211, 238, 0.55);
+    color: #67e8f9;
+    transition: background-color 150ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 150ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .btn-neon-secondary:hover {
+    background: rgba(34, 211, 238, 0.1);
+    box-shadow: 0 0 18px rgba(34, 211, 238, 0.25);
+  }
+
+  /* Nav link underline sweep (design.md §7.1) */
+  .nav-link {
+    position: relative;
+  }
+  .nav-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -4px;
+    height: 2px;
+    width: 100%;
+    background: #22d3ee;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .nav-link:hover::after,
+  .nav-link[data-active="true"]::after {
+    transform: scaleX(1);
+  }
+
+  /* Tiling noise texture overlay */
+  .noise-overlay {
+    background-image: url("/noise-texture.png");
+    background-repeat: repeat;
+    background-size: 256px 256px;
+  }
+
+  /* World-boundary radar pulse: expands once every 4s (home.md §6) */
+  @keyframes radar-boundary {
+    0% { transform: scale(1); }
+    11% { transform: scale(1.08); }
+    22% { transform: scale(1); }
+    100% { transform: scale(1); }
+  }
+  .animate-radar-boundary {
+    animation: radar-boundary 4s ease-in-out infinite;
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+
+  /* Fine cyan grid for deep-space sections */
+  .grid-overlay {
+    background-image:
+      linear-gradient(rgba(34, 211, 238, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(34, 211, 238, 0.05) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+}

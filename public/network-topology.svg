@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900" role="img" aria-label="Network topology: clients, WebSocket gateway, authoritative sim, bot manager, snapshot broadcast">
+  <defs>
+    <filter id="nt-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <marker id="nt-arrow-c" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#22D3EE"/>
+    </marker>
+    <marker id="nt-arrow-m" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#E935C1"/>
+    </marker>
+    <marker id="nt-arrow-l" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#A3E635"/>
+    </marker>
+  </defs>
+
+  <rect width="1400" height="900" fill="#030712"/>
+  <g stroke="#22D3EE" stroke-opacity="0.05" stroke-width="1">
+    <path d="M0 90h1400M0 180h1400M0 270h1400M0 360h1400M0 450h1400M0 540h1400M0 630h1400M0 720h1400M0 810h1400"/>
+    <path d="M100 0v900M200 0v900M300 0v900M400 0v900M500 0v900M600 0v900M700 0v900M800 0v900M900 0v900M1000 0v900M1100 0v900M1200 0v900M1300 0v900"/>
+  </g>
+
+  <!-- ===== nodes (isometric terminal panels) ===== -->
+  <g font-family="'JetBrains Mono', monospace">
+    <!-- clients -->
+    <g filter="url(#nt-glow)">
+      <g fill="#07111F" stroke="#22D3EE" stroke-width="2.2">
+        <rect x="80" y="200" width="220" height="86" rx="6"/>
+        <rect x="80" y="360" width="220" height="86" rx="6"/>
+        <rect x="80" y="520" width="220" height="86" rx="6"/>
+      </g>
+      <g fill="#67E8F9" font-size="17" letter-spacing="1.5">
+        <text x="104" y="238">CLIENT A</text>
+        <text x="104" y="398">CLIENT B</text>
+        <text x="104" y="558">CLIENT N…</text>
+      </g>
+      <g fill="#64748B" font-size="13">
+        <text x="104" y="264">60fps interp · predict</text>
+        <text x="104" y="424">60fps interp · predict</text>
+        <text x="104" y="584">canvas 2d · frustum cull</text>
+      </g>
+      <circle cx="88" cy="212" r="4" fill="#22D3EE"/>
+      <circle cx="88" cy="372" r="4" fill="#E935C1"/>
+      <circle cx="88" cy="532" r="4" fill="#A3E635"/>
+    </g>
+
+    <!-- ws gateway -->
+    <g filter="url(#nt-glow)">
+      <rect x="470" y="330" width="240" height="140" rx="6" fill="#0B1628" stroke="#67E8F9" stroke-width="2.6"/>
+      <text x="494" y="378" font-size="20" fill="#F8FAFC" letter-spacing="2">WS GATEWAY</text>
+      <text x="494" y="408" font-size="13" fill="#64748B">node + ws · heartbeat 15s</text>
+      <text x="494" y="432" font-size="13" fill="#64748B">input rate-limit · dedupe</text>
+      <circle cx="482" cy="344" r="4" fill="#67E8F9"/>
+    </g>
+
+    <!-- authoritative sim -->
+    <g filter="url(#nt-glow)">
+      <rect x="860" y="200" width="300" height="150" rx="6" fill="#0B1628" stroke="#E935C1" stroke-width="2.6"/>
+      <text x="884" y="248" font-size="20" fill="#F8FAFC" letter-spacing="2">AUTHORITATIVE SIM</text>
+      <text x="884" y="278" font-size="13" fill="#64748B">20Hz logic tick · single room</text>
+      <text x="884" y="302" font-size="13" fill="#64748B">spatial grid · object pools</text>
+      <text x="884" y="326" font-size="13" fill="#64748B">in-memory · 0 database</text>
+      <circle cx="872" cy="214" r="4" fill="#E935C1"/>
+    </g>
+
+    <!-- bot manager -->
+    <g filter="url(#nt-glow)">
+      <rect x="880" y="480" width="260" height="120" rx="6" fill="#0B1628" stroke="#A3E635" stroke-width="2.6"/>
+      <text x="904" y="524" font-size="20" fill="#F8FAFC" letter-spacing="2">BOT MANAGER</text>
+      <text x="904" y="554" font-size="13" fill="#64748B">units ≥ 10 · smooth exit</text>
+      <text x="904" y="578" font-size="13" fill="#64748B">same stats as players</text>
+      <circle cx="892" cy="494" r="4" fill="#A3E635"/>
+    </g>
+
+    <!-- snapshot broadcast -->
+    <g filter="url(#nt-glow)">
+      <rect x="880" y="690" width="300" height="110" rx="6" fill="#0B1628" stroke="#8B5CF6" stroke-width="2.6"/>
+      <text x="904" y="734" font-size="20" fill="#F8FAFC" letter-spacing="2">SNAPSHOT CAST</text>
+      <text x="904" y="764" font-size="13" fill="#64748B">15Hz · array json · &lt;8KB</text>
+      <circle cx="892" cy="704" r="4" fill="#8B5CF6"/>
+    </g>
+  </g>
+
+  <!-- ===== data flows ===== -->
+  <g fill="none" stroke-width="2.6" filter="url(#nt-glow)">
+    <!-- inputs: clients -> gateway -->
+    <path d="M300 243 C390 243 390 372 470 380" stroke="#22D3EE" stroke-dasharray="8 8" marker-end="url(#nt-arrow-c)"/>
+    <path d="M300 403 C380 403 390 400 470 400" stroke="#22D3EE" stroke-dasharray="8 8" marker-end="url(#nt-arrow-c)"/>
+    <path d="M300 563 C390 563 390 428 470 420" stroke="#22D3EE" stroke-dasharray="8 8" marker-end="url(#nt-arrow-c)"/>
+    <!-- gateway -> sim -->
+    <path d="M710 370 C780 350 790 300 860 285" stroke="#22D3EE" stroke-dasharray="8 8" marker-end="url(#nt-arrow-c)"/>
+    <!-- sim <-> bot manager -->
+    <path d="M1010 350 L1010 480" stroke="#A3E635" stroke-dasharray="8 8" marker-end="url(#nt-arrow-l)"/>
+    <path d="M960 480 L960 350" stroke="#A3E635" stroke-opacity="0.55" stroke-dasharray="4 10" marker-end="url(#nt-arrow-l)"/>
+    <!-- sim -> snapshot -->
+    <path d="M1010 600 L1010 690" stroke="#E935C1" stroke-dasharray="8 8" marker-end="url(#nt-arrow-m)"/>
+    <!-- snapshot -> gateway -> clients -->
+    <path d="M880 745 C700 780 640 470 710 452" stroke="#E935C1" stroke-opacity="0.9" stroke-dasharray="8 8" marker-end="url(#nt-arrow-m)"/>
+    <path d="M470 440 C380 460 380 480 300 545" stroke="#E935C1" stroke-opacity="0.9" stroke-dasharray="8 8" marker-end="url(#nt-arrow-m)"/>
+  </g>
+
+  <!-- flow labels -->
+  <g font-family="'JetBrains Mono', monospace" font-size="14" letter-spacing="1.5">
+    <text x="330" y="222" fill="#22D3EE">["i",seq,ax,ay,angle,fire] · 20–30Hz</text>
+    <text x="730" y="300" fill="#22D3EE">validated inputs</text>
+    <text x="1024" y="425" fill="#A3E635">spawn / retire</text>
+    <text x="1024" y="655" fill="#E935C1">events</text>
+    <text x="320" y="512" fill="#E935C1">["s",tick,ships,bullets] · 15Hz</text>
+    <text x="700" y="868" text-anchor="middle" font-size="16" fill="#64748B">SINGLE ROOM · MEMORY STATE · 20Hz TICK · 15Hz SNAPSHOT · &lt;150MB RAM</text>
+  </g>
+
+  <!-- corner brackets -->
+  <g fill="none" stroke="#22D3EE" stroke-opacity="0.5" stroke-width="2.4">
+    <path d="M36 66 V36 H66 M1334 36 H1364 V66 M1364 834 V864 H1334 M66 864 H36 V834"/>
+  </g>
+</svg>

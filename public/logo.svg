@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="NEON SWARM logo">
+  <defs>
+    <radialGradient id="lg-bg" cx="50%" cy="42%" r="72%">
+      <stop offset="0%" stop-color="#0B1628"/>
+      <stop offset="70%" stop-color="#07111F"/>
+      <stop offset="100%" stop-color="#030712"/>
+    </radialGradient>
+    <linearGradient id="lg-ship" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#67E8F9"/>
+      <stop offset="55%" stop-color="#22D3EE"/>
+      <stop offset="100%" stop-color="#0E7490"/>
+    </linearGradient>
+    <linearGradient id="lg-wing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E935C1"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <filter id="lg-glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="10" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="96" fill="url(#lg-bg)"/>
+
+  <!-- radar rings -->
+  <g fill="none" filter="url(#lg-glow)">
+    <circle cx="256" cy="256" r="188" stroke="#22D3EE" stroke-opacity="0.28" stroke-width="3"/>
+    <circle cx="256" cy="256" r="148" stroke="#22D3EE" stroke-opacity="0.45" stroke-width="3" stroke-dasharray="4 10"/>
+    <circle cx="256" cy="256" r="188" stroke="#E935C1" stroke-opacity="0.8" stroke-width="4"
+            stroke-dasharray="70 1110" stroke-linecap="round" transform="rotate(-35 256 256)"/>
+  </g>
+
+  <!-- radar cross ticks -->
+  <g stroke="#67E8F9" stroke-opacity="0.5" stroke-width="3" stroke-linecap="round">
+    <path d="M256 44v26M256 442v26M44 256h26M442 256h26"/>
+  </g>
+
+  <!-- fighter: top-down triangular ship -->
+  <g filter="url(#lg-glow)">
+    <path d="M256 118 L320 330 L256 284 L192 330 Z" fill="url(#lg-ship)" stroke="#67E8F9" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M256 160 L292 300 L256 268 Z" fill="#030712" fill-opacity="0.55"/>
+    <!-- wings -->
+    <path d="M196 296 L136 372 L204 340 Z" fill="url(#lg-wing)" stroke="#E935C1" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M316 296 L376 372 L308 340 Z" fill="url(#lg-wing)" stroke="#E935C1" stroke-width="3" stroke-linejoin="round"/>
+    <!-- engine glow -->
+    <circle cx="256" cy="342" r="14" fill="#22D3EE"/>
+    <circle cx="256" cy="342" r="7" fill="#F8FAFC"/>
+    <!-- cockpit -->
+    <circle cx="256" cy="212" r="11" fill="#030712" stroke="#67E8F9" stroke-width="3"/>
+  </g>
+</svg>

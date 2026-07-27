@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900" role="img" aria-label="Dynamic world expansion map">
+  <defs>
+    <radialGradient id="wm-radar" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#22D3EE" stop-opacity="0.10"/>
+      <stop offset="70%" stop-color="#22D3EE" stop-opacity="0.03"/>
+      <stop offset="100%" stop-color="#22D3EE" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="wm-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <marker id="wm-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#E935C1"/>
+    </marker>
+  </defs>
+
+  <rect width="1400" height="900" fill="#030712"/>
+
+  <!-- cyan radar grid -->
+  <g stroke="#22D3EE" stroke-opacity="0.07" stroke-width="1">
+    <path d="M0 90h1400M0 180h1400M0 270h1400M0 360h1400M0 450h1400M0 540h1400M0 630h1400M0 720h1400M0 810h1400"/>
+    <path d="M100 0v900M200 0v900M300 0v900M400 0v900M500 0v900M600 0v900M700 0v900M800 0v900M900 0v900M1000 0v900M1100 0v900M1200 0v900M1300 0v900"/>
+  </g>
+
+  <circle cx="700" cy="450" r="430" fill="url(#wm-radar)"/>
+
+  <!-- concentric range rings -->
+  <g fill="none" stroke="#22D3EE" stroke-opacity="0.25" stroke-width="1.4">
+    <circle cx="700" cy="450" r="120"/>
+    <circle cx="700" cy="450" r="240" stroke-dasharray="6 10"/>
+    <circle cx="700" cy="450" r="360" stroke-opacity="0.15"/>
+  </g>
+  <g stroke="#67E8F9" stroke-opacity="0.4" stroke-width="1.4">
+    <path d="M700 450 L700 30 M700 450 L700 870 M700 450 L280 450 M700 450 L1120 450" stroke-dasharray="2 12"/>
+  </g>
+
+  <!-- initial world boundary: 4000px radius -->
+  <g filter="url(#wm-glow)">
+    <circle cx="700" cy="450" r="300" fill="none" stroke="#22D3EE" stroke-width="3"/>
+    <circle cx="700" cy="450" r="300" fill="none" stroke="#67E8F9" stroke-width="1.2" stroke-dasharray="2 14"/>
+    <!-- expanded segments -->
+    <path d="M700 60 A390 390 0 0 1 1052 306" fill="none" stroke="#E935C1" stroke-width="3" stroke-dasharray="16 10"/>
+    <path d="M348 306 A390 390 0 0 1 310 450" fill="none" stroke="#E935C1" stroke-width="3" stroke-dasharray="16 10"/>
+    <!-- expansion arrows -->
+    <path d="M958 218 L1046 138" stroke="#E935C1" stroke-width="3" marker-end="url(#wm-arrow)"/>
+    <path d="M442 218 L354 138" stroke="#E935C1" stroke-width="3" marker-end="url(#wm-arrow)"/>
+    <path d="M1010 620 L1090 700" stroke="#E935C1" stroke-width="3" marker-end="url(#wm-arrow)"/>
+  </g>
+
+  <!-- player trails -->
+  <g fill="none" stroke-linecap="round" stroke-opacity="0.8">
+    <path d="M560 520 q60 -50 130 -30 q60 18 96 -30" stroke="#22D3EE" stroke-width="2.4" stroke-dasharray="1 9"/>
+    <path d="M830 560 q-40 60 -110 60 q-70 0 -96 -52" stroke="#E935C1" stroke-width="2.4" stroke-dasharray="1 9"/>
+    <path d="M620 330 q80 -20 120 40" stroke="#A3E635" stroke-width="2.4" stroke-dasharray="1 9"/>
+  </g>
+
+  <!-- entities -->
+  <g filter="url(#wm-glow)">
+    <circle cx="700" cy="450" r="10" fill="#F8FAFC"/>
+    <circle cx="700" cy="450" r="17" fill="none" stroke="#F8FAFC" stroke-opacity="0.6" stroke-width="1.6"/>
+    <circle cx="786" cy="460" r="6" fill="#E935C1"/>
+    <circle cx="624" cy="568" r="6" fill="#22D3EE"/>
+    <circle cx="740" cy="370" r="6" fill="#A3E635"/>
+    <circle cx="580" cy="498" r="6" fill="#F97316"/>
+    <circle cx="952" cy="212" r="6" fill="#8B5CF6"/>
+  </g>
+
+  <!-- labels -->
+  <g font-family="'JetBrains Mono', monospace" letter-spacing="2">
+    <text x="700" y="430" text-anchor="middle" font-size="15" fill="#F8FAFC">YOU</text>
+    <text x="700" y="146" text-anchor="middle" font-size="19" fill="#22D3EE">INITIAL WORLD · R 4000PX</text>
+    <text x="1063" y="300" font-size="19" fill="#E935C1">+2000PX EXPANSION</text>
+    <text x="337" y="290" text-anchor="end" font-size="19" fill="#E935C1">EDGE &lt; 800PX → GROW</text>
+    <text x="700" y="838" text-anchor="middle" font-size="16" fill="#64748B">DYNAMIC WORLD · NO WALLS · NEON GRID BOUNDARY ONLY</text>
+  </g>
+
+  <!-- corner brackets -->
+  <g fill="none" stroke="#22D3EE" stroke-opacity="0.5" stroke-width="2.4">
+    <path d="M36 66 V36 H66 M1334 36 H1364 V66 M1364 834 V864 H1334 M66 864 H36 V834"/>
+  </g>
+</svg>

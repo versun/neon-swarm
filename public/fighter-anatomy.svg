@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-label="Fighter anatomy blueprint">
+  <defs>
+    <filter id="fa-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <linearGradient id="fa-core" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22D3EE"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- blueprint grid -->
+  <g stroke="#22D3EE" stroke-opacity="0.06" stroke-width="1">
+    <path d="M0 100h1200M0 200h1200M0 300h1200M0 400h1200M0 500h1200M0 600h1200M0 700h1200M0 800h1200"/>
+    <path d="M100 0v900M200 0v900M300 0v900M400 0v900M500 0v900M600 0v900M700 0v900M800 0v900M900 0v900M1000 0v900M1100 0v900"/>
+  </g>
+  <g stroke="#22D3EE" stroke-opacity="0.12" stroke-width="1">
+    <path d="M0 450h1200M600 0v900"/>
+  </g>
+
+  <!-- ship outline, top-down -->
+  <g filter="url(#fa-glow)" fill="none" stroke-linejoin="round">
+    <path d="M600 190 L720 640 L600 570 L480 640 Z" stroke="#22D3EE" stroke-width="3"/>
+    <path d="M600 260 L662 560 L600 512 L538 560 Z" stroke="#67E8F9" stroke-width="1.6" stroke-dasharray="8 6"/>
+    <!-- wings -->
+    <path d="M486 566 L330 716 L470 660 Z" stroke="#E935C1" stroke-width="2.4"/>
+    <path d="M714 566 L870 716 L730 660 Z" stroke="#E935C1" stroke-width="2.4"/>
+    <!-- engine block -->
+    <rect x="556" y="560" width="88" height="70" stroke="#A3E635" stroke-width="2.4"/>
+    <path d="M566 630h68M566 644h68" stroke="#A3E635" stroke-width="1.4" stroke-dasharray="5 5"/>
+    <!-- cannons -->
+    <path d="M512 500 L512 330 M688 500 L688 330" stroke="#FBBF24" stroke-width="3"/>
+    <path d="M500 330h24M676 330h24" stroke="#FBBF24" stroke-width="3"/>
+    <!-- shield arc -->
+    <path d="M452 480 A190 190 0 0 1 748 480" stroke="#8B5CF6" stroke-width="2.4" stroke-dasharray="14 10"/>
+    <!-- core -->
+    <circle cx="600" cy="440" r="46" stroke="url(#fa-core)" stroke-width="3.4"/>
+    <circle cx="600" cy="440" r="24" stroke="#67E8F9" stroke-width="1.6" stroke-dasharray="4 6"/>
+    <circle cx="600" cy="440" r="7" fill="#22D3EE" stroke="none"/>
+    <!-- nose node -->
+    <circle cx="600" cy="190" r="9" fill="#E935C1" stroke="none"/>
+  </g>
+
+  <!-- dimension markers -->
+  <g stroke="#64748B" stroke-width="1.4" stroke-dasharray="3 6">
+    <path d="M600 190 V120 M330 716 V780 M870 716 V780"/>
+    <path d="M512 330 H300 M688 330 H900 M600 440 H920 M600 595 H260"/>
+  </g>
+  <g fill="#64748B">
+    <circle cx="600" cy="120" r="4"/><circle cx="330" cy="780" r="4"/><circle cx="870" cy="780" r="4"/>
+  </g>
+
+  <!-- callout labels -->
+  <g font-family="'JetBrains Mono', monospace" font-size="20" letter-spacing="2">
+    <g fill="#FBBF24">
+      <text x="140" y="326">CANNON ×2</text>
+      <text x="140" y="354" font-size="15" fill="#64748B">DMG 20 / 5 RPS CAP</text>
+    </g>
+    <g fill="#8B5CF6">
+      <text x="900" y="470" text-anchor="end">SHIELD ARC</text>
+      <text x="900" y="498" font-size="15" fill="#64748B" text-anchor="end">HP 100 PASSIVE</text>
+    </g>
+    <g fill="#22D3EE">
+      <text x="948" y="436">CORE REACTOR</text>
+      <text x="948" y="464" font-size="15" fill="#64748B">RANDOM NEON ID</text>
+    </g>
+    <g fill="#A3E635">
+      <text x="250" y="600" text-anchor="end">ENGINE</text>
+      <text x="250" y="628" font-size="15" fill="#64748B" text-anchor="end">300 PX/S THRUST</text>
+    </g>
+    <g fill="#E935C1">
+      <text x="600" y="96" text-anchor="middle">NOSE SENSOR</text>
+      <text x="600" y="820" text-anchor="middle" font-size="16" fill="#64748B">FIG-01 · TOP-DOWN ANATOMY · NEON BLUEPRINT</text>
+    </g>
+  </g>
+
+  <!-- corner brackets -->
+  <g fill="none" stroke="#22D3EE" stroke-opacity="0.6" stroke-width="2.4">
+    <path d="M40 70 V40 H70 M1130 40 H1160 V70 M1160 830 V860 H1130 M70 860 H40 V830"/>
+  </g>
+</svg>

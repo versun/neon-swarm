@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800" role="img" aria-label="Abstract AI bot fighter portrait">
+  <defs>
+    <radialGradient id="bp-bg" cx="50%" cy="42%" r="70%">
+      <stop offset="0%" stop-color="#0B1628"/>
+      <stop offset="75%" stop-color="#07111F"/>
+      <stop offset="100%" stop-color="#030712"/>
+    </radialGradient>
+    <linearGradient id="bp-hull" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A3E635" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#22D3EE" stop-opacity="0.75"/>
+    </linearGradient>
+    <linearGradient id="bp-ring" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22D3EE"/>
+      <stop offset="100%" stop-color="#A3E635"/>
+    </linearGradient>
+    <filter id="bp-glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="8" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="800" height="800" rx="48" fill="url(#bp-bg)"/>
+
+  <!-- holographic scanlines -->
+  <g stroke="#22D3EE" stroke-opacity="0.05" stroke-width="2">
+    <path d="M0 100h800M0 160h800M0 220h800M0 280h800M0 340h800M0 400h800M0 460h800M0 520h800M0 580h800M0 640h800M0 700h800"/>
+  </g>
+
+  <!-- outer targeting rings -->
+  <g fill="none" filter="url(#bp-glow)">
+    <circle cx="400" cy="390" r="270" stroke="#22D3EE" stroke-opacity="0.3" stroke-width="2.4" stroke-dasharray="6 14"/>
+    <circle cx="400" cy="390" r="228" stroke="#A3E635" stroke-opacity="0.5" stroke-width="2.6"
+            stroke-dasharray="120 1310" stroke-linecap="round" transform="rotate(-60 400 390)"/>
+    <circle cx="400" cy="390" r="228" stroke="#A3E635" stroke-opacity="0.5" stroke-width="2.6"
+            stroke-dasharray="120 1310" stroke-linecap="round" transform="rotate(120 400 390)"/>
+  </g>
+  <g stroke="#67E8F9" stroke-opacity="0.55" stroke-width="2.4" stroke-linecap="round">
+    <path d="M400 96v34M400 650v34M106 390h34M660 390h34"/>
+  </g>
+
+  <!-- bot hull: triangular bow, semi-transparent hologram -->
+  <g filter="url(#bp-glow)">
+    <path d="M400 170 L548 560 L400 492 L252 560 Z" fill="url(#bp-hull)" fill-opacity="0.28" stroke="url(#bp-ring)" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M400 230 L496 516 L400 462 L304 516 Z" fill="#22D3EE" fill-opacity="0.12" stroke="#67E8F9" stroke-opacity="0.6" stroke-width="1.6" stroke-dasharray="8 6"/>
+    <!-- side fins -->
+    <path d="M262 512 L170 608 L268 566 Z" fill="#A3E635" fill-opacity="0.25" stroke="#A3E635" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M538 512 L630 608 L532 566 Z" fill="#A3E635" fill-opacity="0.25" stroke="#A3E635" stroke-width="2.6" stroke-linejoin="round"/>
+  </g>
+
+  <!-- electronic eyes -->
+  <g filter="url(#bp-glow)">
+    <rect x="330" y="330" width="56" height="14" rx="7" fill="#A3E635"/>
+    <rect x="414" y="330" width="56" height="14" rx="7" fill="#A3E635"/>
+    <rect x="330" y="330" width="56" height="14" rx="7" fill="none" stroke="#D9F99D" stroke-width="1.4"/>
+    <rect x="414" y="330" width="56" height="14" rx="7" fill="none" stroke="#D9F99D" stroke-width="1.4"/>
+  </g>
+
+  <!-- ring core -->
+  <g filter="url(#bp-glow)" fill="none">
+    <circle cx="400" cy="440" r="52" stroke="url(#bp-ring)" stroke-width="4"/>
+    <circle cx="400" cy="440" r="34" stroke="#67E8F9" stroke-opacity="0.7" stroke-width="1.8" stroke-dasharray="5 7"/>
+    <circle cx="400" cy="440" r="12" fill="#22D3EE" stroke="none"/>
+    <circle cx="400" cy="440" r="5" fill="#F8FAFC" stroke="none"/>
+  </g>
+
+  <!-- neural tick marks -->
+  <g stroke="#22D3EE" stroke-opacity="0.5" stroke-width="1.6">
+    <path d="M340 440h-26M460 440h26M400 380v-24M400 500v22"/>
+  </g>
+
+  <!-- BOT tag -->
+  <g font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="3">
+    <rect x="330" y="688" width="140" height="42" rx="4" fill="#07111F" stroke="#A3E635" stroke-width="2"/>
+    <text x="400" y="716" font-size="22" fill="#A3E635">BOT · AI</text>
+  </g>
+</svg>
