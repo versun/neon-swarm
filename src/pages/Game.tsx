@@ -46,12 +46,16 @@ function MainHudPanel({ engine }: { engine: GameEngine }) {
   const selfUpg = useHud(engine.store, (s) => s.selfUpg);
   const selfName = useHud(engine.store, (s) => s.selfName);
   const selfColor = useHud(engine.store, (s) => s.selfColor);
+  const selfId = useHud(engine.store, (s) => s.selfId);
   const highContrast = useHud(engine.store, (s) => s.highContrast);
   const reducedMotion = useHud(engine.store, (s) => s.reducedMotion);
+  // rosterVersion 变化即重算（kill 事件驱动名册战绩更新）
+  useHud(engine.store, (s) => s.rosterVersion);
+  const kills = engine.net.roster.get(selfId)?.kills ?? 0;
 
   const upg = unpackUpg(selfUpg);
   const lv =
-    upg.lvBullet + upg.lvMove + upg.lvHp + (upg.dual ? 1 : 0) + upg.lvAmmoRegen + upg.lvHpRegen;
+    upg.lvBullet + upg.lvMove + upg.lvHp + (upg.dual ? 1 : 0) + upg.lvAmmoRegen + upg.lvHpRegen + upg.lvLock;
   const parts: string[] = [];
   if (upg.lvBullet > 0) parts.push(t("hud.upg.bullet", { n: upg.lvBullet * 5 }));
   if (upg.lvMove > 0) parts.push(t("hud.upg.move", { n: upg.lvMove * 5 }));
@@ -59,6 +63,7 @@ function MainHudPanel({ engine }: { engine: GameEngine }) {
   if (upg.dual) parts.push(t("hud.upg.dual"));
   if (upg.lvAmmoRegen > 0) parts.push(t("hud.upg.ammoRegen", { n: upg.lvAmmoRegen }));
   if (upg.lvHpRegen > 0) parts.push(t("hud.upg.hpRegen", { n: upg.lvHpRegen }));
+  if (upg.lvLock > 0) parts.push(t("hud.upg.lock", { n: upg.lvLock }));
   const nextAt = upgradeThreshold(lv);
 
   return (
@@ -81,6 +86,7 @@ function MainHudPanel({ engine }: { engine: GameEngine }) {
         <AmmoBar
           ammo={ammo}
           regen={ammoRegen}
+          regenAmount={upgAmmoRegenRate(upg.lvAmmoRegen)}
           highContrast={highContrast}
           reducedMotion={reducedMotion}
         />
@@ -96,6 +102,11 @@ function MainHudPanel({ engine }: { engine: GameEngine }) {
         <span className="ml-2 text-slate-600">
           {t("hud.hitsNext", { a: selfHits, b: nextAt })}
         </span>
+      </p>
+      {/* 本场累计击杀（名册战绩，kill 事件即时刷新；死亡不清零） */}
+      <p className="mt-1 font-mono text-[10px] tracking-[0.14em]">
+        <span className="text-slate-500">{t("hud.kills")}</span>
+        <span className="ml-1.5 tabular-nums text-neon-red">{kills}</span>
       </p>
     </div>
   );

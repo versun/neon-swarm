@@ -93,6 +93,7 @@ export default function HeroSection() {
     { id: "01", title: t("rules.r1.title"), body: t("rules.r1.body") },
     { id: "02", title: t("rules.r2.title"), body: t("rules.r2.body") },
     { id: "03", title: t("rules.r3.title"), body: t("rules.r3.body") },
+    { id: "04", title: t("rules.r4.title"), body: t("rules.r4.body") },
   ];
 
   const toggleAudio = async () => {
@@ -235,12 +236,12 @@ export default function HeroSection() {
           {t("hero.hint", { stats: t("hero.stats") })}
         </motion.p>
 
-        {/* 规则三条：紧随主模块，不另起区块 */}
+        {/* 规则四条：紧随主模块，不另起区块 */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.72 }}
-          className="mt-14 grid gap-x-10 gap-y-6 border-t border-white/10 pt-8 md:grid-cols-3"
+          className="mt-14 grid gap-x-10 gap-y-6 border-t border-white/10 pt-8 md:grid-cols-2 lg:grid-cols-4"
         >
           {RULES.map((r) => (
             <div key={r.id}>

@@ -34,7 +34,7 @@ export interface HudState {
   phase: GamePhase;
   hp: number;
   ammo: number;
-  /** 弹药恢复进度 0–1（距下一次 +5） */
+  /** 弹药恢复进度 0–1（距下一跳恢复；相位经快照锚定与服务端同步） */
   ammoRegen: number;
   /** 本轮生命累计命中数（升级触发进度） */
   selfHits: number;
@@ -73,6 +73,8 @@ export interface HudState {
   hurtKey: number;
   /** 重生完成 SHIELD ONLINE 提示 */
   shieldKey: number;
+  /** 当前锁定的敌机 id（0=无锁定）；仅本机视角 */
+  lockTargetId: number;
 }
 
 const initialState: HudState = {
@@ -108,6 +110,7 @@ const initialState: HudState = {
   targetDownKey: 0,
   hurtKey: 0,
   shieldKey: 0,
+  lockTargetId: 0,
 };
 
 /** 击杀流最大条数（pushFeed 即裁剪，渲染层无需再截断） */

@@ -34,13 +34,19 @@ export const BULLET_LIFE_S = 1.8;
 export const BULLET_RADIUS = 8; // 子弹判定半径（碰撞 = SHIP_HIT_RADIUS + BULLET_RADIUS，扫掠判定）
 export const MAX_BULLETS = 240;
 
-// ── 准心锁定（连续命中同一敌机触发，制导弹巡航；仅真人玩家，Bot 不参与） ──
+// ── 准心锁定（连续命中同一敌机触发，制导弹巡航固定时长；仅真人玩家，Bot 不参与） ──
 /** 触发锁定所需的连续命中数（命中其他目标会重置累计；打空不断） */
-export const LOCK_HITS_REQUIRED = 3;
-/** 准心大圈半径 px：准心外圈（17px）的 2 倍。目标保持在大圈内锁定才维持；飞出即解锁 */
-export const LOCK_RADIUS = 34;
+export const LOCK_HITS_REQUIRED = 4;
+/** 基础锁定时长（毫秒）：到期自动释放；升级选项「锁定时间」每级 +LOCK_TIME_PER_LEVEL_MS */
+export const LOCK_DURATION_MS = 3000;
+/** 升级选项「锁定时间」每级增加的锁定毫秒数 */
+export const LOCK_TIME_PER_LEVEL_MS = 1000;
 /** 制导子弹转向速率 rad/s（速度大小不变，纯追踪 + 提前量） */
 export const LOCK_TURN_RATE = 7;
+/** 锁定时长（毫秒）：基础 3s + 锁定时间升级每级 +1s */
+export function upgLockDurationMs(lvLock: number): number {
+  return LOCK_DURATION_MS + lvLock * LOCK_TIME_PER_LEVEL_MS;
+}
 
 /** 找不到就近锚点时的回退出生净空距离（远距随机出生） */
 export const SPAWN_MIN_DIST = 800;
@@ -102,8 +108,7 @@ export const FLAG_HIDDEN = 1 << 2; // 升级选择中：隐身（不渲染、不
 
 /** 加入战场（昵称 ≤10 字符；可不带，服务端生成 PILOT-XXXX） */
 export type MsgJoin = ["join", name?: string];
-/** 输入：seq 自增序号；ax/ay ∈ [-1,1] 加速向量；angle 瞄准角；fire 0/1；
- * aimX/aimY 为准心世界坐标（可选，锁定大圈的圆心；缺失时服务端用本机位置回退） */
+/** 输入：seq 自增序号；ax/ay ∈ [-1,1] 加速向量；angle 瞄准角；fire 0/1 */
 export type MsgInput = [
   "i",
   seq: number,
@@ -111,12 +116,10 @@ export type MsgInput = [
   ay: number,
   angle: number,
   fire: 0 | 1,
-  aimX?: number,
-  aimY?: number,
 ];
 /** RTT 探测 */
 export type MsgPing = ["ping", t: number];
-/** 升级选择：option 为 UPGRADE_OPTIONS 下标（0–5；3=dual 限选一次） */
+/** 升级选择：option 为 UPGRADE_OPTIONS 下标（0–6；3=dual 限选一次） */
 export type MsgUpgrade = ["u", option: number];
 
 export type ClientMessage = MsgJoin | MsgInput | MsgPing | MsgUpgrade;
@@ -153,7 +156,7 @@ export type ShipRow = [
   upg: number,
 ];
 
-// ── 战机等级升级（四选一，仅真人玩家；Bot 不参与） ──
+// ── 战机等级升级（七选一，仅真人玩家；Bot 不参与） ──
 /** 累计命中达到 UPGRADE_HIT_BASE·2^level 时触发一次升级选择 */
 export const UPGRADE_HIT_BASE = 10;
 /** 升级选择窗口（毫秒），超时由服务器随机代选 */
@@ -166,8 +169,8 @@ export function upgradeThreshold(level: number): number {
   return UPGRADE_HIT_BASE * Math.pow(2, level);
 }
 
-/** 升级选项 id（固定 6 项；dual 全局限选一次） */
-export const UPGRADE_OPTIONS = ["bullet", "move", "hp", "dual", "ammoRegen", "hpRegen"] as const;
+/** 升级选项 id（固定 7 项；dual 全局限选一次；lock=锁定时间 +1s/级） */
+export const UPGRADE_OPTIONS = ["bullet", "move", "hp", "dual", "ammoRegen", "hpRegen", "lock"] as const;
 export type UpgradeOption = (typeof UPGRADE_OPTIONS)[number];
 
 export function upgBulletSpeed(lvBullet: number): number {
@@ -184,7 +187,7 @@ export function upgAmmoRegenRate(lvAmmoRegen: number): number {
   return AMMO_REGEN_AMOUNT + lvAmmoRegen;
 }
 
-/** ShipRow 第 11 字段打包位：lvBullet[0:4] | lvMove[4:8] | lvHp[8:12] | dual[12] | lvAmmoRegen[13:17] | lvHpRegen[17:21] */
+/** ShipRow 第 11 字段打包位：lvBullet[0:4] | lvMove[4:8] | lvHp[8:12] | dual[12] | lvAmmoRegen[13:17] | lvHpRegen[17:21] | lvLock[21:25] */
 export function packUpg(
   lvBullet: number,
   lvMove: number,
@@ -192,6 +195,7 @@ export function packUpg(
   dual: boolean,
   lvAmmoRegen: number,
   lvHpRegen: number,
+  lvLock: number,
 ): number {
   return (
     (lvBullet & 15) |
@@ -199,7 +203,8 @@ export function packUpg(
     ((lvHp & 15) << 8) |
     ((dual ? 1 : 0) << 12) |
     ((lvAmmoRegen & 15) << 13) |
-    ((lvHpRegen & 15) << 17)
+    ((lvHpRegen & 15) << 17) |
+    ((lvLock & 15) << 21)
   );
 }
 export function unpackUpg(upg: number): {
@@ -209,6 +214,7 @@ export function unpackUpg(upg: number): {
   dual: boolean;
   lvAmmoRegen: number;
   lvHpRegen: number;
+  lvLock: number;
 } {
   return {
     lvBullet: upg & 15,
@@ -217,6 +223,7 @@ export function unpackUpg(upg: number): {
     dual: ((upg >> 12) & 1) === 1,
     lvAmmoRegen: (upg >> 13) & 15,
     lvHpRegen: (upg >> 17) & 15,
+    lvLock: (upg >> 21) & 15,
   };
 }
 
@@ -237,8 +244,8 @@ export type EvOffer = ["offer", id: number, msLeft: number];
 export type EvUpgrade = ["upgrade", id: number, option: number, x: number, y: number];
 /** lock：shooter 连续命中 victim 达阈值，准心锁定生效（制导开始） */
 export type EvLock = ["lock", shooterId: number, victimId: number];
-/** unlock：锁定解除。reason：0=目标死亡 1=目标飞出准心大圈 2=目标消失/隐身 */
-export type EvUnlock = ["unlock", shooterId: number, victimId: number, reason: 0 | 1 | 2];
+/** unlock：锁定解除。reason：0=目标死亡 2=目标消失/隐身 3=锁定时长到期（1 为旧版「飞出准心大圈」，已废弃不再产生） */
+export type EvUnlock = ["unlock", shooterId: number, victimId: number, reason: 0 | 1 | 2 | 3];
 export type GameEvent = EvHit | EvKill | EvRespawn | EvJoin | EvLeave | EvWorld | EvOffer | EvUpgrade | EvLock | EvUnlock;
 
 /** 握手：你的 id、当前 tick、世界边界、完整名册 */

@@ -1,12 +1,12 @@
 /**
  * UpgradeOverlay — 战机等级升级选择
- * 触发：累计命中达到阈值（服务端 offer 事件）。固定 6 个选项：
- * 弹速+5% / 移速+5% / 生命+5% / 双枪（限选一次）/ 子弹恢复+1/s / 生命恢复+1/s。
+ * 触发：累计命中达到阈值（服务端 offer 事件）。固定 7 个选项：
+ * 弹速+5% / 移速+5% / 生命+5% / 双枪（限选一次）/ 子弹恢复+1/s / 生命恢复+1/s / 锁定时间+1s。
  * 10 秒倒计时，超时服务端随机代选；选择期间战机隐身，战绩保留；
  * 选择后恢复全部生命与弹药（服务端广播 upgrade 事件生效）。
  */
 import { useEffect, useState } from "react";
-import { Zap, Gauge, Heart, Crosshair, RefreshCw, HeartPulse } from "lucide-react";
+import { Zap, Gauge, Heart, Crosshair, RefreshCw, HeartPulse, Timer } from "lucide-react";
 import type { GameEngine } from "../engine";
 import { useHud } from "../store";
 import { cn } from "@/lib/utils";
@@ -20,6 +20,7 @@ const OPTIONS = [
   { id: 3, key: "up.opt.dual" as const, icon: Crosshair, tone: "text-neon-amber border-neon-amber/40 hover:border-neon-amber" },
   { id: 4, key: "up.opt.ammoRegen" as const, icon: RefreshCw, tone: "text-neon-magenta border-neon-magenta/40 hover:border-neon-magenta" },
   { id: 5, key: "up.opt.hpRegen" as const, icon: HeartPulse, tone: "text-neon-red border-neon-red/40 hover:border-neon-red" },
+  { id: 6, key: "up.opt.lock" as const, icon: Timer, tone: "text-neon-violet border-neon-violet/40 hover:border-neon-violet" },
 ];
 
 export default function UpgradeOverlay({ engine }: { engine: GameEngine }) {
@@ -35,12 +36,12 @@ export default function UpgradeOverlay({ engine }: { engine: GameEngine }) {
     return () => window.clearInterval(id);
   }, [offer]);
 
-  // 数字键 1–6 快捷选择
+  // 数字键 1–7 快捷选择
   useEffect(() => {
     if (!offer) return;
     const onKey = (e: KeyboardEvent) => {
       const n = Number(e.key);
-      if (n >= 1 && n <= 6) engine.chooseUpgrade(n - 1);
+      if (n >= 1 && n <= 7) engine.chooseUpgrade(n - 1);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);

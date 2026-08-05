@@ -83,7 +83,12 @@ export class GameNet {
   private reconnectAttempts = 0;
   private disposed = false;
   /** 最近一次输入状态，由输入层每帧写入，发送循环按固定频率消费 */
-  private pendingInput: { ax: number; ay: number; angle: number; fire: 0 | 1 } = {
+  private pendingInput: {
+    ax: number;
+    ay: number;
+    angle: number;
+    fire: 0 | 1;
+  } = {
     ax: 0,
     ay: 0,
     angle: 0,
@@ -143,7 +148,7 @@ export class GameNet {
     this.pendingInput.fire = fire;
   }
 
-  /** 升级选择（UPGRADE_OPTIONS 下标 0–5） */
+  /** 升级选择（UPGRADE_OPTIONS 下标 0–6） */
   sendUpgrade(option: number) {
     this.send(["u", option]);
   }
@@ -233,8 +238,7 @@ export class GameNet {
       if (!this.isOpen()) return;
       const { ax, ay, angle, fire } = this.pendingInput;
       this.seq += 1;
-      const msg: ClientMessage = ["i", this.seq, ax, ay, angle, fire];
-      this.send(msg);
+      this.send(["i", this.seq, ax, ay, angle, fire]);
     }, 1000 / INPUT_HZ);
     // RTT 探测
     this.pingTimer = window.setInterval(() => {

@@ -11,11 +11,14 @@ import { useI18n } from "@/i18n";
 export default function AmmoBar({
   ammo,
   regen,
+  regenAmount = AMMO_REGEN_AMOUNT,
   highContrast,
   reducedMotion,
 }: {
   ammo: number;
   regen: number; // 0–1，距下一次弹药恢复的进度
+  /** 每跳实际恢复量（升级回弹选项后 > AMMO_REGEN_AMOUNT），用于底轨预览宽度 */
+  regenAmount?: number;
   highContrast: boolean;
   reducedMotion: boolean;
 }) {
@@ -41,10 +44,10 @@ export default function AmmoBar({
           highContrast ? "border-white/70" : "border-neon-cyan/30",
         )}
       >
-        {/* 恢复进度底轨（AMMO_REGEN_MS 周期推进） */}
+        {/* 恢复进度底轨（AMMO_REGEN_MS 周期推进；预览量 = 每跳实际恢复量 × 进度） */}
         <div
           className="absolute inset-y-0 left-0 bg-neon-cyan/15"
-          style={{ width: `${Math.min(1, (ammo + AMMO_REGEN_AMOUNT * regen) / MAX_AMMO) * 100}%` }}
+          style={{ width: `${Math.min(1, (ammo + regenAmount * regen) / MAX_AMMO) * 100}%` }}
         />
         <div
           className={cn("absolute inset-y-0 left-0", empty ? "bg-slate-500" : "bg-neon-cyan")}
