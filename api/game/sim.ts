@@ -802,8 +802,8 @@ export class Sim {
       let minD2 = Infinity;
       for (const s of this.ships.values()) {
         if (!s.alive) continue;
-        const dx = s.x - x;
-        const dy = s.y - y;
+        const dx = x - s.x;
+        const dy = y - s.y;
         const d2 = dx * dx + dy * dy;
         if (d2 < minD2) minD2 = d2;
       }
