@@ -7,7 +7,8 @@
 - **惯性飞行**：推进加速 + 指数阻尼，速度有上限，转向有惯性
 - **射击对战**：单发 1 点伤害、15 发击毁；命中敌机可为开火者回复生命
 - **弹药管理**：上限 50 发，随时间自动恢复
-- **升级系统**：累计命中触发升级（四选一窗口，超时服务器代选）——弹速 / 移速 / 生命 / 双重射击（限选一次）/ 弹药回复 / 生命回复
+- **准心锁定**：对同一敌机连续命中 3 发触发锁定，子弹自动巡航追踪；目标飞出准心圈、被击毁或隐身即解锁（仅真人触发，Bot 不参与）
+- **升级系统**：累计命中触发升级（六选一窗口，超时服务器代选）——弹速 / 移速 / 生命 / 双重射击（限选一次）/ 弹药回复 / 生命回复
 - **3 秒重生**：锚定存活战机附近重新入场，保持战场节奏
 - **动态世界**：初始 4000px 半径，玩家接近边界时世界自动扩展
 - **Bot 补位**：战场最少保持 10 个战斗单位，Bot 更慢、更迟钝、瞄不准
@@ -76,24 +77,5 @@ docker run -p 3000:3000 -e DATABASE_URL="mysql://..." neon-swarm
 | `npm run check` | TypeScript 类型检查 |
 | `npm run lint` | ESLint |
 | `npm run format` | Prettier 格式化 |
-| `npm test` | Vitest（暂无测试用例） |
+| `npm test` | Vitest（准心锁定机制单元测试，见 `api/game/sim.lock.test.ts`） |
 | `npm run db:generate` / `db:migrate` / `db:push` | Drizzle 迁移管理 |
-
-## 目录结构
-
-```
-api/            服务端（Hono）
-  boot.ts       入口：tRPC 路由、静态文件、生产模式挂载游戏服务器
-  game/         游戏服务端：server.ts（WebSocket 层）、sim.ts（权威模拟）、
-                bots.ts（Bot AI）、leaderboard.ts（积分榜持久化）
-contracts/      前后端共享协议契约（消息格式、常量、升级位打包）
-db/             Drizzle schema（game_scores 积分榜表）
-src/
-  game/         客户端游戏：engine（编排）、renderer（Canvas 2D）、net（网络）、
-                interp（插值/预测）、input（键鼠/触控）、audio（合成音效）、hud/
-  pages/        Home（营销落地页）与 Game（战场）
-  components/   UI 组件（shadcn/ui + 首页 sections）
-  i18n/         中英双语文案
-public/         logo、keyart 等静态资源
-Dockerfile      生产镜像（多阶段构建）
-```

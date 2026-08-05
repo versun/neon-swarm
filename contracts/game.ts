@@ -34,6 +34,14 @@ export const BULLET_LIFE_S = 1.8;
 export const BULLET_RADIUS = 8; // 子弹判定半径（碰撞 = SHIP_HIT_RADIUS + BULLET_RADIUS，扫掠判定）
 export const MAX_BULLETS = 240;
 
+// ── 准心锁定（连续命中同一敌机触发，制导弹巡航；仅真人玩家，Bot 不参与） ──
+/** 触发锁定所需的连续命中数（命中其他目标会重置累计；打空不断） */
+export const LOCK_HITS_REQUIRED = 3;
+/** 准心大圈半径 px：准心外圈（17px）的 2 倍。目标保持在大圈内锁定才维持；飞出即解锁 */
+export const LOCK_RADIUS = 34;
+/** 制导子弹转向速率 rad/s（速度大小不变，纯追踪 + 提前量） */
+export const LOCK_TURN_RATE = 7;
+
 /** 找不到就近锚点时的回退出生净空距离（远距随机出生） */
 export const SPAWN_MIN_DIST = 800;
 
@@ -94,8 +102,18 @@ export const FLAG_HIDDEN = 1 << 2; // 升级选择中：隐身（不渲染、不
 
 /** 加入战场（昵称 ≤10 字符；可不带，服务端生成 PILOT-XXXX） */
 export type MsgJoin = ["join", name?: string];
-/** 输入：seq 自增序号；ax/ay ∈ [-1,1] 加速向量；angle 瞄准角；fire 0/1 */
-export type MsgInput = ["i", seq: number, ax: number, ay: number, angle: number, fire: 0 | 1];
+/** 输入：seq 自增序号；ax/ay ∈ [-1,1] 加速向量；angle 瞄准角；fire 0/1；
+ * aimX/aimY 为准心世界坐标（可选，锁定大圈的圆心；缺失时服务端用本机位置回退） */
+export type MsgInput = [
+  "i",
+  seq: number,
+  ax: number,
+  ay: number,
+  angle: number,
+  fire: 0 | 1,
+  aimX?: number,
+  aimY?: number,
+];
 /** RTT 探测 */
 export type MsgPing = ["ping", t: number];
 /** 升级选择：option 为 UPGRADE_OPTIONS 下标（0–5；3=dual 限选一次） */
@@ -217,7 +235,11 @@ export type EvWorld = ["world", bounds: WorldBounds];
 export type EvOffer = ["offer", id: number, msLeft: number];
 /** upgrade：升级生效（option 为选项下标，x/y 为生效位置，供升级动效） */
 export type EvUpgrade = ["upgrade", id: number, option: number, x: number, y: number];
-export type GameEvent = EvHit | EvKill | EvRespawn | EvJoin | EvLeave | EvWorld | EvOffer | EvUpgrade;
+/** lock：shooter 连续命中 victim 达阈值，准心锁定生效（制导开始） */
+export type EvLock = ["lock", shooterId: number, victimId: number];
+/** unlock：锁定解除。reason：0=目标死亡 1=目标飞出准心大圈 2=目标消失/隐身 */
+export type EvUnlock = ["unlock", shooterId: number, victimId: number, reason: 0 | 1 | 2];
+export type GameEvent = EvHit | EvKill | EvRespawn | EvJoin | EvLeave | EvWorld | EvOffer | EvUpgrade | EvLock | EvUnlock;
 
 /** 握手：你的 id、当前 tick、世界边界、完整名册 */
 export type MsgHello = ["hello", yourId: number, tick: number, world: WorldBounds, roster: RosterEntry[]];
