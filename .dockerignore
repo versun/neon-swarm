@@ -1,0 +1,8 @@
+node_modules
+dist
+.git
+*.swp
+*.log
+# 环境凭据不进镜像（由平台运行时注入环境变量）
+.env
+.env.*
