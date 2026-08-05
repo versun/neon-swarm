@@ -32,6 +32,9 @@ import {
   COLOR_POOL,
   UPGRADE_OPTIONS,
   UPGRADE_CHOICE_MS,
+  LOCK_HITS_REQUIRED,
+  LOCK_RADIUS,
+  LOCK_TURN_RATE,
   upgradeThreshold,
   upgBulletSpeed,
   upgMoveSpeed,
@@ -85,6 +88,12 @@ export interface Ship {
   lvHpRegen: number;
   /** 升级选择中：隐身冻结，deadline 前等待玩家选择 */
   upgradeUntil: number;
+  /** 准心锁定目标（0 = 无锁定；锁定期间发射的子弹转为制导巡航） */
+  lockTargetId: number;
+  /** 连续命中累计的目标（命中他人即切换并归零；打空不断） */
+  streakVictimId: number;
+  /** 对 streakVictimId 的连续命中数（达 LOCK_HITS_REQUIRED 触发锁定） */
+  streakHits: number;
   respawnAt: number;
   lastFireAt: number;
   lastRegenAt: number;
@@ -93,6 +102,9 @@ export interface Ship {
   inAy: number;
   inAngle: number;
   inFire: 0 | 1;
+  /** 准心世界坐标（锁定大圈圆心；缺省回退为本机位置） */
+  inAimX: number;
+  inAimY: number;
 }
 
 interface Bullet {
@@ -106,6 +118,8 @@ interface Bullet {
   vy: number;
   angle: number;
   ownerId: number;
+  /** 制导巡航目标（0 = 直线弹；发射时取自射手 lockTargetId） */
+  targetId: number;
   age: number;
 }
 
@@ -165,6 +179,9 @@ export class Sim {
       lvAmmoRegen: 0,
       lvHpRegen: 0,
       upgradeUntil: 0,
+      lockTargetId: 0,
+      streakVictimId: 0,
+      streakHits: 0,
       respawnAt: 0,
       lastFireAt: 0,
       lastRegenAt: this.nowMs,
@@ -172,6 +189,8 @@ export class Sim {
       inAy: 0,
       inAngle: 0,
       inFire: 0,
+      inAimX: p.x,
+      inAimY: p.y,
     };
     this.ships.set(id, ship);
     this.emit("join", id, name, colorIdx, isBot ? 1 : 0);
@@ -180,17 +199,32 @@ export class Sim {
 
   removeUnit(id: number): void {
     if (this.ships.delete(id)) {
+      // 下线目标：解除所有指向它的准心锁定
+      for (const s of this.ships.values()) {
+        if (s.lockTargetId === id) this.unlock(s, 2);
+      }
       this.emit("leave", id);
     }
   }
 
-  setInput(id: number, ax: number, ay: number, angle: number, fire: 0 | 1): void {
+  setInput(
+    id: number,
+    ax: number,
+    ay: number,
+    angle: number,
+    fire: 0 | 1,
+    aimX?: number,
+    aimY?: number,
+  ): void {
     const s = this.ships.get(id);
     if (!s) return;
     s.inAx = Math.max(-1, Math.min(1, ax));
     s.inAy = Math.max(-1, Math.min(1, ay));
     if (Number.isFinite(angle)) s.inAngle = angle;
     s.inFire = fire;
+    // 准心世界坐标（锁定大圈圆心），缺失时保持上一帧值
+    if (typeof aimX === "number" && Number.isFinite(aimX)) s.inAimX = aimX;
+    if (typeof aimY === "number" && Number.isFinite(aimY)) s.inAimY = aimY;
   }
 
   roster(): RosterEntry[] {
@@ -229,6 +263,18 @@ export class Sim {
         s.inFire = 0;
         this.emit("offer", s.id, UPGRADE_CHOICE_MS);
         continue;
+      }
+
+      // 准心锁定维持：目标死亡/隐身/下线 → 解锁(2)；目标飞出准心大圈 → 解锁(1)
+      if (s.lockTargetId !== 0) {
+        const t = this.ships.get(s.lockTargetId);
+        if (!t || !t.alive || t.upgradeUntil > 0) {
+          this.unlock(s, 2);
+        } else {
+          const dx = t.x - s.inAimX;
+          const dy = t.y - s.inAimY;
+          if (dx * dx + dy * dy > LOCK_RADIUS * LOCK_RADIUS) this.unlock(s, 1);
+        }
       }
 
       // 惯性物理（与客户端预测严格同公式）：
@@ -298,9 +344,40 @@ export class Sim {
       }
     }
 
-    // 2) 子弹推进与寿命（记录上一位置用于扫掠碰撞）
+    // 2) 子弹推进与寿命（记录上一位置用于扫掠碰撞；制导弹先转向再积分）
     for (let i = this.bullets.length - 1; i >= 0; i--) {
       const b = this.bullets[i];
+      // 制导巡航：追踪锁定目标（目标失效/隐身，或射手已解锁 → 退化为直线弹）
+      if (b.targetId !== 0) {
+        const target = this.ships.get(b.targetId);
+        const shooter = this.ships.get(b.ownerId);
+        if (
+          !target ||
+          !target.alive ||
+          target.upgradeUntil > 0 ||
+          !shooter ||
+          shooter.lockTargetId !== b.targetId
+        ) {
+          b.targetId = 0;
+        } else {
+          // 纯追踪 + 提前量：瞄准目标当前位置 + 速度 × 弹到目标的飞行时间
+          const spd = Math.hypot(b.vx, b.vy) || 1;
+          const dx = target.x - b.x;
+          const dy = target.y - b.y;
+          const tof = (Math.hypot(dx, dy) || 1) / spd;
+          const want = Math.atan2(
+            target.y + target.vy * tof - b.y,
+            target.x + target.vx * tof - b.x,
+          );
+          let turn = want - b.angle;
+          while (turn > Math.PI) turn -= Math.PI * 2;
+          while (turn < -Math.PI) turn += Math.PI * 2;
+          const maxTurn = LOCK_TURN_RATE * DT;
+          b.angle += Math.max(-maxTurn, Math.min(maxTurn, turn));
+          b.vx = Math.cos(b.angle) * spd;
+          b.vy = Math.sin(b.angle) * spd;
+        }
+      }
       b.px = b.x;
       b.py = b.y;
       b.x += b.vx * DT;
@@ -463,6 +540,7 @@ export class Sim {
       vy: 0,
       angle: 0,
       ownerId: 0,
+      targetId: 0,
       age: 0,
     };
     b.id = this.nextBulletId++;
@@ -477,6 +555,8 @@ export class Sim {
     b.vx = cos * speed;
     b.vy = sin * speed;
     b.ownerId = s.id;
+    // 锁定激活时发射即制导（巡航维持条件在子弹推进中逐 tick 校验）
+    b.targetId = s.lockTargetId;
     b.age = 0;
     this.bullets.push(b);
   }
@@ -498,6 +578,7 @@ export class Sim {
   ): void {
     victim.hp -= DAMAGE;
     const shooter = this.ships.get(b.ownerId);
+    let lockTriggered = false;
     if (shooter && shooter.alive) {
       // 命中回血：开火者 +HIT_HEAL（封顶当前等级生命上限）
       const cap = upgMaxHp(shooter.lvHp);
@@ -505,7 +586,20 @@ export class Sim {
         shooter.hp = Math.min(cap, shooter.hp + HIT_HEAL);
       }
       // 升级触发进度：累计命中 +1（仅真人计数；Bot 不参与升级；重生清零）
-      if (!shooter.isBot) shooter.hits++;
+      if (!shooter.isBot) {
+        shooter.hits++;
+        // 准心锁定累计：对同一目标连续命中 +1，命中他人切换归零（打空不断）；
+        // 达 LOCK_HITS_REQUIRED 且当前无锁定 → 锁定该目标（仅真人；Bot 不参与）
+        if (shooter.streakVictimId === victim.id) shooter.streakHits++;
+        else {
+          shooter.streakVictimId = victim.id;
+          shooter.streakHits = 1;
+        }
+        if (shooter.lockTargetId === 0 && shooter.streakHits >= LOCK_HITS_REQUIRED) {
+          shooter.lockTargetId = victim.id;
+          lockTriggered = true; // 延迟到 hit 事件之后再广播，保持 hit→lock 语义顺序
+        }
+      }
     }
     this.emit(
       "hit",
@@ -515,6 +609,7 @@ export class Sim {
       Math.round(b.angle * 1000) / 1000,
       b.ownerId,
     );
+    if (lockTriggered && shooter) this.emit("lock", shooter.id, victim.id);
     if (victim.hp > 0) return;
     victim.alive = false;
     victim.deaths++;
@@ -528,7 +623,21 @@ export class Sim {
       // 实时积分榜：每次击杀立即刷新该昵称的最高击杀数（仅真人；取历史最佳）
       if (!killer.isBot) leaderboard.record(killer.name, killer.kills);
     }
+    // 目标死亡：解除所有以其为目标的准心锁定（含致死那发刚触发的锁定）
+    for (const s of this.ships.values()) {
+      if (s.lockTargetId === victim.id) this.unlock(s, 0);
+    }
     this.emit("kill", b.ownerId, victim.id);
+  }
+
+  /** 解除准心锁定并广播。reason：0=目标死亡 1=飞出大圈 2=目标消失/隐身 */
+  private unlock(s: Ship, reason: 0 | 1 | 2): void {
+    const victimId = s.lockTargetId;
+    if (victimId === 0) return;
+    s.lockTargetId = 0;
+    s.streakVictimId = 0;
+    s.streakHits = 0;
+    this.emit("unlock", s.id, victimId, reason);
   }
 
   /** 玩家升级选择（C→S ["u", option]）；校验：选择窗口内 + dual 限选一次 */
@@ -600,6 +709,12 @@ export class Sim {
     s.lvAmmoRegen = 0;
     s.lvHpRegen = 0;
     s.upgradeUntil = 0;
+    // 准心锁定与累计清零（静默：客户端经 respawn 事件自清，无 unlock 广播）
+    s.lockTargetId = 0;
+    s.streakVictimId = 0;
+    s.streakHits = 0;
+    s.inAimX = s.x;
+    s.inAimY = s.y;
     s.alive = true;
     s.lastFireAt = 0;
     s.lastRegenAt = this.nowMs;
@@ -687,8 +802,8 @@ export class Sim {
       let minD2 = Infinity;
       for (const s of this.ships.values()) {
         if (!s.alive) continue;
-        const dx = x - s.x;
-        const dy = y - s.y;
+        const dx = s.x - x;
+        const dy = s.y - y;
         const d2 = dx * dx + dy * dy;
         if (d2 < minD2) minD2 = d2;
       }
