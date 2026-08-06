@@ -68,6 +68,10 @@ export class GameEngine {
   private isMobile = false;
   private lastFireAt = 0;
   private latestShips: ReturnType<typeof sampleShips> | null = null;
+  /** 弹药恢复相位锚点：服务端恢复计时由"上次实际恢复/满弹开火"锚定（sim.step），
+   * 客户端无从获知，经快照观测 ammo 变化同步本地相位（HUD 底轨用） */
+  private lastAmmoAnchorAt = 0;
+  private prevHudAmmo = MAX_AMMO;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -336,11 +340,29 @@ export class GameEngine {
         if (id === this.net.yourId) {
           this.audio.respawn();
           this.deathAt = 0;
+          // 重生即清空本机锁定状态（服务端静默清零，不下发 unlock）
           this.store.set({
             phase: "live",
             respawnLeft: 0,
             shieldKey: this.store.getState().shieldKey + 1,
+            lockTargetId: 0,
           });
+        }
+      } else if (ev[0] === "lock") {
+        // 准心锁定触发（仅本机视角反馈；其他玩家的锁定不关己）
+        const [, shooterId, victimId] = ev;
+        if (shooterId === this.net.yourId) {
+          this.store.set({ lockTargetId: victimId });
+          this.audio.killConfirm();
+          this.toast("TARGET LOCKED");
+        }
+      } else if (ev[0] === "unlock") {
+        // 锁定解除：0=目标死亡（击杀反馈已覆盖） 2=目标消失/隐身 3=锁定时长到期
+        const [, shooterId, , reason] = ev;
+        if (shooterId === this.net.yourId) {
+          this.store.set({ lockTargetId: 0 });
+          if (reason === 3) this.toast("LOCK EXPIRED");
+          else if (reason === 2) this.toast("LOCK LOST");
         }
       } else if (ev[0] === "join") {
         const [, id, name, , isBot] = ev;
@@ -442,8 +464,10 @@ export class GameEngine {
 
     // 输入 → 网络 + 本机预测
     const cam = this.renderer.getCamera();
-    const selfSX = this.predictor.x - cam.x + this.canvas.clientWidth / 2;
-    const selfSY = this.predictor.y - cam.y + this.canvas.clientHeight / 2;
+    const viewW = this.canvas.clientWidth;
+    const viewH = this.canvas.clientHeight;
+    const selfSX = this.predictor.x - cam.x + viewW / 2;
+    const selfSY = this.predictor.y - cam.y + viewH / 2;
     const inputState = this.input.getState(selfSX, selfSY);
     if (live && selfAlive && !selfHidden) {
       this.net.setInput(inputState.ax, inputState.ay, inputState.angle, inputState.fire);
@@ -480,6 +504,8 @@ export class GameEngine {
         aimX: this.input.mouseX,
         aimY: this.input.mouseY,
         showCrosshair: !this.isMobile,
+        // 锁定机制：当前锁定的敌机 id（0=无锁定；目标四角旋转锁定框）
+        lockTargetId: state.lockTargetId,
         ammoFrac: (selfRow ? selfRow.ammo : 0) / MAX_AMMO,
         lastFireAt: this.lastFireAt,
       },
@@ -489,10 +515,20 @@ export class GameEngine {
     // HUD store 10Hz 节流同步
     if (now - this.lastHudSync > HUD_SYNC_MS) {
       this.lastHudSync = now;
+      // 弹药恢复相位同步：ammo 上升=服务端完成一次恢复（锚定此刻）；
+      // 满弹后首次下降=满弹开火重置了服务端恢复计时（同步锚定）
+      const hudAmmo = selfRow ? selfRow.ammo : MAX_AMMO;
+      if (
+        hudAmmo > this.prevHudAmmo ||
+        (this.prevHudAmmo >= MAX_AMMO && hudAmmo < MAX_AMMO)
+      ) {
+        this.lastAmmoAnchorAt = now;
+      }
+      this.prevHudAmmo = hudAmmo;
       this.store.set({
         hp: selfRow ? selfRow.hp : state.phase === "respawning" ? 0 : MAX_HP,
-        ammo: selfRow ? selfRow.ammo : MAX_AMMO,
-        ammoRegen: (now % AMMO_REGEN_MS) / AMMO_REGEN_MS,
+        ammo: hudAmmo,
+        ammoRegen: Math.min(1, (now - this.lastAmmoAnchorAt) / AMMO_REGEN_MS),
         selfHits: selfRow ? selfRow.hits : 0,
         selfUpg: selfRow ? selfRow.upg : 0,
         rtt: Math.round(this.net.rtt),

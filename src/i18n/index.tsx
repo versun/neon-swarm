@@ -41,6 +41,8 @@ const zh = {
   "rules.r2.body": "50 发弹药，每秒恢复 1 发，命中回血。",
   "rules.r3.title": "三秒重生",
   "rules.r3.body": "被击毁 3 秒后自动重返战场。",
+  "rules.r4.title": "连续4发锁定",
+  "rules.r4.body": "对同一敌机连续命中 4 发锁定目标 3 秒，子弹自动巡航追踪，锁定到期自动释放。",
 
   // ── 首页操作说明 ──────────────────────
   "controls.label": "操作方式",
@@ -162,6 +164,7 @@ const zh = {
   "up.opt.dual.desc": "每次齐射两发子弹，限选一次",
   "up.opt.ammoRegen": "子弹恢复 +1/秒",
   "up.opt.hpRegen": "生命恢复 +1/秒",
+  "up.opt.lock": "锁定时间 +1秒",
   "up.taken": "已装备",
   "up.key": "按 {k} 选择",
   "hud.upg.bullet": "弹速+{n}%",
@@ -170,8 +173,10 @@ const zh = {
   "hud.upg.dual": "双枪",
   "hud.upg.ammoRegen": "回弹+{n}/s",
   "hud.upg.hpRegen": "回血+{n}/s",
+  "hud.upg.lock": "锁定+{n}s",
   "hud.upg.none": "未升级",
   "hud.hitsNext": "命中 {a}/{b}",
+  "hud.kills": "击杀",
 
   // ── 积分榜 ────────────────────────────
   "sb.title": "蜂群积分榜",
@@ -244,6 +249,8 @@ const en: Record<I18nKey, string> = {
   "rules.r2.body": "50 rounds, +1 per second. Hits restore HP.",
   "rules.r3.title": "3s Respawn",
   "rules.r3.body": "Destroyed? You auto-respawn in 3 seconds.",
+  "rules.r4.title": "4-Hit Lock-On",
+  "rules.r4.body": "Land 4 consecutive hits on the same enemy to lock on for 3s — bullets home in until the lock expires.",
 
   "controls.label": "CONTROLS",
   "controls.titleA": "Only three things to learn: ",
@@ -364,6 +371,7 @@ const en: Record<I18nKey, string> = {
   "up.opt.dual.desc": "Fire two bullets per volley, one-time only",
   "up.opt.ammoRegen": "AMMO REGEN +1/S",
   "up.opt.hpRegen": "HP REGEN +1/S",
+  "up.opt.lock": "LOCK DURATION +1S",
   "up.taken": "EQUIPPED",
   "up.key": "Press {k}",
   "hud.upg.bullet": "SPD+{n}%",
@@ -372,8 +380,10 @@ const en: Record<I18nKey, string> = {
   "hud.upg.dual": "DUAL",
   "hud.upg.ammoRegen": "AMMO+{n}/S",
   "hud.upg.hpRegen": "REGEN+{n}/S",
+  "hud.upg.lock": "LOCK+{n}S",
   "hud.upg.none": "STOCK",
   "hud.hitsNext": "HITS {a}/{b}",
+  "hud.kills": "KILLS",
 
   "sb.title": "SWARM SCOREBOARD",
   "sb.pilot": "PILOT",

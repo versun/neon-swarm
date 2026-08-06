@@ -33,13 +33,13 @@ import {
   UPGRADE_OPTIONS,
   UPGRADE_CHOICE_MS,
   LOCK_HITS_REQUIRED,
-  LOCK_RADIUS,
   LOCK_TURN_RATE,
   upgradeThreshold,
   upgBulletSpeed,
   upgMoveSpeed,
   upgMaxHp,
   upgAmmoRegenRate,
+  upgLockDurationMs,
   packUpg,
 } from "../../contracts/game";
 import type {
@@ -86,10 +86,14 @@ export interface Ship {
   lvAmmoRegen: number;
   /** 生命恢复速度级数（每级 1/s） */
   lvHpRegen: number;
+  /** 锁定时间级数（每级锁定时长 +1s） */
+  lvLock: number;
   /** 升级选择中：隐身冻结，deadline 前等待玩家选择 */
   upgradeUntil: number;
   /** 准心锁定目标（0 = 无锁定；锁定期间发射的子弹转为制导巡航） */
   lockTargetId: number;
+  /** 锁定到期时间戳（ms，服务端时钟）；到期自动解锁(3) */
+  lockUntil: number;
   /** 连续命中累计的目标（命中他人即切换并归零；打空不断） */
   streakVictimId: number;
   /** 对 streakVictimId 的连续命中数（达 LOCK_HITS_REQUIRED 触发锁定） */
@@ -102,9 +106,6 @@ export interface Ship {
   inAy: number;
   inAngle: number;
   inFire: 0 | 1;
-  /** 准心世界坐标（锁定大圈圆心；缺省回退为本机位置） */
-  inAimX: number;
-  inAimY: number;
 }
 
 interface Bullet {
@@ -178,8 +179,10 @@ export class Sim {
       dualGun: false,
       lvAmmoRegen: 0,
       lvHpRegen: 0,
+      lvLock: 0,
       upgradeUntil: 0,
       lockTargetId: 0,
+      lockUntil: 0,
       streakVictimId: 0,
       streakHits: 0,
       respawnAt: 0,
@@ -189,8 +192,6 @@ export class Sim {
       inAy: 0,
       inAngle: 0,
       inFire: 0,
-      inAimX: p.x,
-      inAimY: p.y,
     };
     this.ships.set(id, ship);
     this.emit("join", id, name, colorIdx, isBot ? 1 : 0);
@@ -213,8 +214,6 @@ export class Sim {
     ay: number,
     angle: number,
     fire: 0 | 1,
-    aimX?: number,
-    aimY?: number,
   ): void {
     const s = this.ships.get(id);
     if (!s) return;
@@ -222,9 +221,6 @@ export class Sim {
     s.inAy = Math.max(-1, Math.min(1, ay));
     if (Number.isFinite(angle)) s.inAngle = angle;
     s.inFire = fire;
-    // 准心世界坐标（锁定大圈圆心），缺失时保持上一帧值
-    if (typeof aimX === "number" && Number.isFinite(aimX)) s.inAimX = aimX;
-    if (typeof aimY === "number" && Number.isFinite(aimY)) s.inAimY = aimY;
   }
 
   roster(): RosterEntry[] {
@@ -248,6 +244,17 @@ export class Sim {
         continue;
       }
 
+      // 准心锁定维持（置于升级冻结检查之前：即使射手正在选升级，超时/目标失效也照常解锁）：
+      // 目标死亡/隐身/下线 → 解锁(2)；锁定时长到期 → 解锁(3)
+      if (s.lockTargetId !== 0) {
+        const t = this.ships.get(s.lockTargetId);
+        if (!t || !t.alive || t.upgradeUntil > 0) {
+          this.unlock(s, 2);
+        } else if (nowMs >= s.lockUntil) {
+          this.unlock(s, 3);
+        }
+      }
+
       // 升级选择中：隐身冻结（不移动、不开火、不吃子弹、不被索敌），
       // 选择超时由服务器随机代选
       if (s.upgradeUntil > 0) {
@@ -263,18 +270,6 @@ export class Sim {
         s.inFire = 0;
         this.emit("offer", s.id, UPGRADE_CHOICE_MS);
         continue;
-      }
-
-      // 准心锁定维持：目标死亡/隐身/下线 → 解锁(2)；目标飞出准心大圈 → 解锁(1)
-      if (s.lockTargetId !== 0) {
-        const t = this.ships.get(s.lockTargetId);
-        if (!t || !t.alive || t.upgradeUntil > 0) {
-          this.unlock(s, 2);
-        } else {
-          const dx = t.x - s.inAimX;
-          const dy = t.y - s.inAimY;
-          if (dx * dx + dy * dy > LOCK_RADIUS * LOCK_RADIUS) this.unlock(s, 1);
-        }
       }
 
       // 惯性物理（与客户端预测严格同公式）：
@@ -494,7 +489,7 @@ export class Sim {
         Math.round(s.ammo),
         (s.isBot ? FLAG_BOT : 0) | (s.upgradeUntil > 0 ? FLAG_HIDDEN : 0),
         s.hits,
-        packUpg(s.lvBullet, s.lvMove, s.lvHp, s.dualGun, s.lvAmmoRegen, s.lvHpRegen),
+        packUpg(s.lvBullet, s.lvMove, s.lvHp, s.dualGun, s.lvAmmoRegen, s.lvHpRegen, s.lvLock),
       ]);
     }
     const bulletRows: BulletRow[] = [];
@@ -597,6 +592,7 @@ export class Sim {
         }
         if (shooter.lockTargetId === 0 && shooter.streakHits >= LOCK_HITS_REQUIRED) {
           shooter.lockTargetId = victim.id;
+          shooter.lockUntil = nowMs + upgLockDurationMs(shooter.lvLock);
           lockTriggered = true; // 延迟到 hit 事件之后再广播，保持 hit→lock 语义顺序
         }
       }
@@ -630,11 +626,12 @@ export class Sim {
     this.emit("kill", b.ownerId, victim.id);
   }
 
-  /** 解除准心锁定并广播。reason：0=目标死亡 1=飞出大圈 2=目标消失/隐身 */
-  private unlock(s: Ship, reason: 0 | 1 | 2): void {
+  /** 解除准心锁定并广播。reason：0=目标死亡 2=目标消失/隐身 3=锁定时长到期 */
+  private unlock(s: Ship, reason: 0 | 2 | 3): void {
     const victimId = s.lockTargetId;
     if (victimId === 0) return;
     s.lockTargetId = 0;
+    s.lockUntil = 0;
     s.streakVictimId = 0;
     s.streakHits = 0;
     this.emit("unlock", s.id, victimId, reason);
@@ -682,6 +679,9 @@ export class Sim {
       case "hpRegen":
         s.lvHpRegen++;
         break;
+      case "lock":
+        s.lvLock++;
+        break;
     }
     // 选择后恢复所有生命值与子弹数量（生命上限按新等级计算）
     s.hp = upgMaxHp(s.lvHp);
@@ -708,13 +708,13 @@ export class Sim {
     s.dualGun = false;
     s.lvAmmoRegen = 0;
     s.lvHpRegen = 0;
+    s.lvLock = 0;
     s.upgradeUntil = 0;
     // 准心锁定与累计清零（静默：客户端经 respawn 事件自清，无 unlock 广播）
     s.lockTargetId = 0;
+    s.lockUntil = 0;
     s.streakVictimId = 0;
     s.streakHits = 0;
-    s.inAimX = s.x;
-    s.inAimY = s.y;
     s.alive = true;
     s.lastFireAt = 0;
     s.lastRegenAt = this.nowMs;

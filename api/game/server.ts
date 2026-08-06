@@ -199,22 +199,17 @@ export class GameServer {
     const ay = msg[3];
     const angle = msg[4];
     const fire = msg[5];
-    // 可选：准心世界坐标（锁定大圈判定用）。缺失（undefined，或 JSON null）时保持上一帧值
-    const aimX = msg[6] ?? undefined;
-    const aimY = msg[7] ?? undefined;
     if (
       typeof seq !== "number" ||
       typeof ax !== "number" ||
       typeof ay !== "number" ||
       typeof angle !== "number" ||
-      (fire !== 0 && fire !== 1) ||
-      (aimX !== undefined && (typeof aimX !== "number" || !Number.isFinite(aimX))) ||
-      (aimY !== undefined && (typeof aimY !== "number" || !Number.isFinite(aimY)))
+      (fire !== 0 && fire !== 1)
     ) {
       return;
     }
     if (!Number.isFinite(ax) || !Number.isFinite(ay)) return;
-    this.sim.setInput(client.shipId, ax, ay, angle, fire, aimX, aimY);
+    this.sim.setInput(client.shipId, ax, ay, angle, fire);
   }
 
   private onClose(client: Client): void {

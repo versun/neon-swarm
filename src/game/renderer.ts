@@ -51,6 +51,8 @@ export interface RenderFrame {
   aimX: number;
   aimY: number;
   showCrosshair: boolean;
+  /** 当前锁定的敌机 id（0=无锁定；目标四角旋转锁定框） */
+  lockTargetId: number;
   /** 弹药 0–1（准星外圈），低弹药变琥珀 */
   ammoFrac: number;
   /** 最近一次开火时间（准星脉冲），0 = 无 */
@@ -1124,10 +1126,44 @@ export class GameRenderer {
       ctx.fillRect(0, 0, this.viewW, this.viewH);
     }
 
+    // ── 锁定 UI：目标四角旋转锁定框（全平台）──
+    if (frame.selfAlive) this.drawLockUI(frame, camX, camY, now);
+
     // ── 准星 ──
     if (frame.showCrosshair && frame.selfAlive) {
       this.drawCrosshair(frame, now);
     }
+  }
+
+  /** 准心锁定机制 UI：锁定期间目标机四角旋转红色锁定框（锁定时长制，服务端到期自动解锁） */
+  private drawLockUI(frame: RenderFrame, camX: number, camY: number, now: number) {
+    const ctx = this.ctx;
+    if (frame.lockTargetId === 0) return;
+    const target = frame.ships.get(frame.lockTargetId);
+    if (!target || (target.flags & FLAG_HIDDEN) !== 0) return;
+    const tx = target.x - camX + this.viewW / 2;
+    const ty = target.y - camY + this.viewH / 2;
+    const r = SHIP_RADIUS + 14;
+    const rot = now / 400; // 缓慢旋转
+    ctx.save();
+    ctx.translate(tx, ty);
+    ctx.rotate(rot);
+    ctx.strokeStyle = "#EF4444";
+    ctx.lineWidth = 2;
+    ctx.shadowColor = "#EF4444";
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    for (let i = 0; i < 4; i++) {
+      const a = (i * Math.PI) / 2 + Math.PI / 4;
+      const cx0 = Math.cos(a) * r;
+      const cy0 = Math.sin(a) * r;
+      // 每个角画两条短边（括号）
+      ctx.moveTo(cx0 - Math.sin(a) * 7, cy0 + Math.cos(a) * 7);
+      ctx.lineTo(cx0, cy0);
+      ctx.lineTo(cx0 + Math.cos(a) * 7, cy0 + Math.sin(a) * 7);
+    }
+    ctx.stroke();
+    ctx.restore();
   }
 
   private drawThreatArrows(frame: RenderFrame, camX: number, camY: number) {
