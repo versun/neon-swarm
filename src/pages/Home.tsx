@@ -14,18 +14,28 @@ export default function Home() {
       <ControlsSection />
       <FighterBlueprint />
       <DynamicWorld />
-      <footer className="border-t border-white/10 bg-void-950">
-        <div className="mx-auto flex max-w-[1280px] justify-center px-5 py-6 lg:px-10">
+      <footer className="footer border-t border-white/10 bg-void-950">
+        <div className="mx-auto flex max-w-[1280px] flex-col items-center justify-center gap-2 px-5 py-6 lg:px-10">
           <p className="font-mono text-xs tracking-[0.2em] text-slate-500">
-            Made by{" "}
+            Made with ❤️{" "}
             <a
               href="https://versun.me"
               target="_blank"
               rel="noreferrer"
-              className="text-neon-cyan-light transition-colors hover:text-white"
+              className="text-neon-cyan-light transition-colors hover:text-white hover:underline"
             >
               Versun
-            </a>
+            </a>{" "}
+            ·{" "}
+            <a
+              href="https://github.com/versun/neon-swarm"
+              target="_blank"
+              rel="noreferrer"
+              className="text-neon-cyan-light transition-colors hover:text-white hover:underline"
+            >
+              Opensource at Github
+            </a>{" "}
+            · v20260922
           </p>
         </div>
       </footer>

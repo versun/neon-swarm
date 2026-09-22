@@ -6,31 +6,20 @@
  * - 实时更新：每次击杀后立即用当前总击杀数刷新纪录，只保留历史最佳；
  * - Bot 永不记录（调用方保证）。
  *
- * 持久化走 MySQL（game_scores 表）；数据库不可用时降级为进程内存，
- * 绝不阻塞或影响游戏主循环（所有 DB 操作均为异步 fire-and-forget + try/catch）。
+ * 核心逻辑为纯内存高性能操作，持久化接口解耦，绝不依赖或阻塞游戏主循环。
  */
-import { getDb } from "../queries/connection";
-// 相对路径导入：@db 别名在 vite.config 直引 api 链路与 esbuild 打包时无法解析
-import { gameScores } from "../../db/schema";
 
 export type LbRow = [name: string, best: number];
 
 const TOP_N = 20;
 
-class Leaderboard {
+export class Leaderboard {
   private best = new Map<string, number>();
-  private dbReady = false;
   private dirty = false;
 
-  /** 启动时加载历史纪录；失败则内存模式继续 */
+  /** 启动时加载历史纪录（内存模式下为空） */
   async init(): Promise<void> {
-    try {
-      const rows = await getDb().select().from(gameScores);
-      for (const r of rows) this.best.set(r.name, r.bestStreak);
-      this.dbReady = true;
-    } catch (e) {
-      console.warn("[leaderboard] DB 不可用，使用内存积分榜:", (e as Error).message);
-    }
+    // 基础纯内存存储，不绑定任何特定 Node/MySQL 依赖
   }
 
   /** 击杀实时结算：总击杀数刷新昵称纪录时更新并标记广播；返回是否产生新纪录 */
@@ -39,20 +28,7 @@ class Leaderboard {
     if (kills <= (this.best.get(name) ?? 0)) return false;
     this.best.set(name, kills);
     this.dirty = true;
-    void this.persist(name, kills);
     return true;
-  }
-
-  private async persist(name: string, best: number): Promise<void> {
-    if (!this.dbReady) return;
-    try {
-      await getDb()
-        .insert(gameScores)
-        .values({ name, bestStreak: best })
-        .onDuplicateKeyUpdate({ set: { bestStreak: best } });
-    } catch (e) {
-      console.warn("[leaderboard] 写入失败:", (e as Error).message);
-    }
   }
 
   top(): LbRow[] {
